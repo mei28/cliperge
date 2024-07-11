@@ -1,0 +1,18 @@
+[package]
+name = "cliperge"
+version = "0.1.0"
+edition = "2021"
+description = "A CLI tool to combine the contents of multiple files and copy to the clipboard"
+license = "MIT"
+repository = "https://github.com/mei28/cliperge"
+keywords = ["cli", "clipboard", "file"]
+categories = ["command-line-utilities"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clipboard = "0.5.0"
+
+[package.metadata.docs.rs]
+# Include examples in documentation.
+all-features = true
