@@ -1,6 +1,6 @@
 # Cliperge
 
-📋Cliperge is a CLI tool to combine the contents of multiple files and copy them to the clipboard.
+📋 Cliperge is a CLI tool to combine the contents of multiple files and copy them to the clipboard.
 
 ## Features
 
