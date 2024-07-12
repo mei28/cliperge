@@ -8,15 +8,23 @@ use std::path::Path;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() < 3 {
+    if args.len() < 2 {
         eprintln!("Usage: cliperge [-f | -r] <file1> <file2> ...");
         return;
     }
 
-    let path_option = &args[1];
-    let file_args = &args[2..];
+    let (path_option, file_args) = if args[1].starts_with('-') {
+        (args[1].clone(), &args[2..])
+    } else {
+        (String::new(), &args[1..])
+    };
 
-    let combined_content = match combine_files_content(path_option, file_args) {
+    if file_args.is_empty() {
+        eprintln!("No files provided");
+        return;
+    }
+
+    let combined_content = match combine_files_content(&path_option, file_args) {
         Ok(content) => content,
         Err(e) => {
             eprintln!("Error: {}", e);
