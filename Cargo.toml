@@ -1,6 +1,6 @@
 [package]
 name = "cliperge"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A CLI tool to combine the contents of multiple files and copy to the clipboard"
 license = "MIT"
@@ -12,6 +12,7 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 clipboard = "0.5.0"
+colored = "2.0.0"
 
 [package.metadata.docs.rs]
 # Include examples in documentation.

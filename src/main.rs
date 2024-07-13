@@ -1,5 +1,6 @@
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
+use colored::*;
 use std::env;
 use std::fs;
 use std::io::Read;
@@ -25,22 +26,29 @@ fn main() {
     }
 
     let combined_content = match combine_files_content(&path_option, file_args) {
-        Ok(content) => content,
+        Ok((content, file_list)) => {
+            if let Err(e) = copy_to_clipboard(&content) {
+                eprintln!("{}: {}", "Failed to copy to clipboard".red(), e);
+            } else {
+                println!("{}", "Copied to the clipboard!".green().bold());
+                println!("{}", "Files copied:".blue().bold());
+                for file in file_list {
+                    println!("  {}", file.cyan());
+                }
+            }
+        }
         Err(e) => {
-            eprintln!("Error: {}", e);
-            return;
+            eprintln!("{}: {}", "Error".red(), e);
         }
     };
-
-    if let Err(e) = copy_to_clipboard(&combined_content) {
-        eprintln!("Failed to copy to clipboard: {}", e);
-    } else {
-        println!("Copied to the clipboard!");
-    }
 }
 
-fn combine_files_content(path_option: &str, file_args: &[String]) -> Result<String, String> {
+fn combine_files_content(
+    path_option: &str,
+    file_args: &[String],
+) -> Result<(String, Vec<String>), String> {
     let mut combined_content = String::new();
+    let mut file_list = Vec::new();
     let current_dir = env::current_dir().map_err(|e| e.to_string())?;
 
     for filename in file_args {
@@ -51,9 +59,10 @@ fn combine_files_content(path_option: &str, file_args: &[String]) -> Result<Stri
             _ => get_file_name(filename),
         };
         combined_content.push_str(&format!("```{}\n{}\n```\n\n", display_name, content));
+        file_list.push(display_name);
     }
 
-    Ok(combined_content)
+    Ok((combined_content, file_list))
 }
 
 fn read_file_content(filename: &str) -> Result<String, String> {
@@ -88,4 +97,3 @@ fn copy_to_clipboard(content: &str) -> Result<(), String> {
     ctx.set_contents(content.to_string())
         .map_err(|e| e.to_string())
 }
-
