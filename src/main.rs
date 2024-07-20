@@ -1,10 +1,9 @@
-use clipboard::ClipboardContext;
-use clipboard::ClipboardProvider;
 use colored::*;
 use std::env;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
+use std::process::Command;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -25,7 +24,7 @@ fn main() {
         return;
     }
 
-    let combined_content = match combine_files_content(&path_option, file_args) {
+    match combine_files_content(&path_option, file_args) {
         Ok((content, file_list)) => {
             if let Err(e) = copy_to_clipboard(&content) {
                 eprintln!("{}: {}", "Failed to copy to clipboard".red(), e);
@@ -93,7 +92,66 @@ fn get_file_name(filename: &str) -> String {
 }
 
 fn copy_to_clipboard(content: &str) -> Result<(), String> {
-    let mut ctx: ClipboardContext = ClipboardProvider::new().map_err(|e| e.to_string())?;
-    ctx.set_contents(content.to_string())
-        .map_err(|e| e.to_string())
+    if cfg!(target_os = "macos") {
+        copy_to_clipboard_macos(content)
+    } else if cfg!(target_os = "linux") {
+        copy_to_clipboard_linux(content)
+    } else {
+        Err("Unsupported operating system".to_string())
+    }
 }
+
+fn copy_to_clipboard_macos(content: &str) -> Result<(), String> {
+    let mut child = Command::new("pbcopy")
+        .stdin(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to execute pbcopy: {}", e))?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+        use std::io::Write;
+        stdin
+            .write_all(content.as_bytes())
+            .map_err(|e| format!("Failed to write to pbcopy stdin: {}", e))?;
+    }
+
+    let output = child
+        .wait_with_output()
+        .map_err(|e| format!("Failed to wait on pbcopy: {}", e))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(format!(
+            "pbcopy exited with non-zero status: {}",
+            output.status
+        ))
+    }
+}
+
+fn copy_to_clipboard_linux(content: &str) -> Result<(), String> {
+    let mut child = Command::new("xclip")
+        .arg("-selection")
+        .arg("clipboard")
+        .stdin(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to execute xclip: {}", e))?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+        use std::io::Write;
+        stdin
+            .write_all(content.as_bytes())
+            .map_err(|e| format!("Failed to write to xclip stdin: {}", e))?;
+    }
+
+    let output = child
+        .wait_with_output()
+        .map_err(|e| format!("Failed to wait on xclip: {}", e))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(format!(
+            "xclip exited with non-zero status: {}",
+            output.status
+        ))
+    }
+}
+
