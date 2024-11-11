@@ -27,7 +27,7 @@ fn main() {
     match combine_files_content(&path_option, file_args) {
         Ok((content, file_list)) => {
             if let Err(e) = copy_to_clipboard(&content) {
-                eprintln!("{}: {}", "Failed to copy to clipboard".red(), e);
+                eprintln!("{}: {}", "Failed to copy to clipboard".magenta(), e);
             } else {
                 println!("{}", "Copied to the clipboard!".green().bold());
                 println!("{}", "Files copied:".blue().bold());
@@ -37,7 +37,7 @@ fn main() {
             }
         }
         Err(e) => {
-            eprintln!("{}: {}", "Error".red(), e);
+            eprintln!("{}: {}", "Error".magenta(), e);
         }
     };
 }
@@ -58,14 +58,14 @@ fn combine_files_content(
             println!(
                 "{}: {}",
                 "Skipping".yellow(),
-                format!("{} (File not found)", filename).red()
+                format!("{} (File not found)", filename).yellow()
             );
             continue;
         } else if path.is_dir() {
             println!(
                 "{}: {}",
                 "Skipping".yellow(),
-                format!("{} (Is a directory)", filename).red()
+                format!("{} (Is a directory)", filename).yellow()
             );
             continue;
         }
@@ -84,7 +84,7 @@ fn combine_files_content(
                 println!(
                     "{}: {}",
                     "Skipping".yellow(),
-                    format!("{} (File not found)", filename).red()
+                    format!("{} (File not found)", filename).yellow()
                 );
             }
             Err(e) => {
@@ -95,7 +95,7 @@ fn combine_files_content(
 
     // Check if any files were successfully copied
     if file_list.is_empty() {
-        println!("{}", "No valid files found to copy.".red().bold());
+        println!("{}", "No valid files found to copy.".yellow().bold());
         return Err("No valid files found.".to_string());
     }
 
