@@ -51,26 +51,72 @@ fn combine_files_content(
     let current_dir = env::current_dir().map_err(|e| e.to_string())?;
 
     for filename in file_args {
-        let content = read_file_content(filename)?;
-        let display_name = match path_option {
-            "-f" => filename.clone(),
-            "-r" => get_relative_path(&current_dir, filename)?,
-            _ => get_file_name(filename),
-        };
-        combined_content.push_str(&format!("```{}\n{}\n```\n\n", display_name, content));
-        file_list.push(display_name);
+        let path = Path::new(filename);
+
+        // Check if the file exists and is not a directory
+        if !path.exists() {
+            println!(
+                "{}: {}",
+                "Skipping".yellow(),
+                format!("{} (File not found)", filename).red()
+            );
+            continue;
+        } else if path.is_dir() {
+            println!(
+                "{}: {}",
+                "Skipping".yellow(),
+                format!("{} (Is a directory)", filename).red()
+            );
+            continue;
+        }
+
+        match read_file_content(filename) {
+            Ok(Some(content)) => {
+                let display_name = match path_option {
+                    "-f" => filename.clone(),
+                    "-r" => get_relative_path(&current_dir, filename)?,
+                    _ => get_file_name(filename),
+                };
+                combined_content.push_str(&format!("```{}\n{}\n```\n\n", display_name, content));
+                file_list.push(display_name);
+            }
+            Ok(None) => {
+                println!(
+                    "{}: {}",
+                    "Skipping".yellow(),
+                    format!("{} (File not found)", filename).red()
+                );
+            }
+            Err(e) => {
+                eprintln!("Error reading {}: {}", filename, e);
+            }
+        }
+    }
+
+    // Check if any files were successfully copied
+    if file_list.is_empty() {
+        println!("{}", "No valid files found to copy.".red().bold());
+        return Err("No valid files found.".to_string());
     }
 
     Ok((combined_content, file_list))
 }
 
-fn read_file_content(filename: &str) -> Result<String, String> {
+fn read_file_content(filename: &str) -> Result<Option<String>, String> {
+    let path = Path::new(filename);
+    if !path.exists() {
+        return Ok(None);
+    }
+    if path.is_dir() {
+        return Err(format!("{} is a directory", filename));
+    }
+
     let mut file =
         fs::File::open(filename).map_err(|e| format!("Failed to open {}: {}", filename, e))?;
     let mut content = String::new();
     file.read_to_string(&mut content)
         .map_err(|e| format!("Failed to read content of {}: {}", filename, e))?;
-    Ok(content)
+    Ok(Some(content))
 }
 
 fn get_relative_path(current_dir: &Path, filename: &str) -> Result<String, String> {
