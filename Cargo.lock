@@ -105,7 +105,7 @@ checksum = "f46ad14479a25103f283c0f10005961cf086d8dc42205bb44c46ac563475dca6"
 
 [[package]]
 name = "cliperge"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "clap",
  "colored",
