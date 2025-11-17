@@ -94,9 +94,11 @@ fn get_relative_path(current_dir: &std::path::Path, filename: &str) -> Result<St
     let full_path = std::path::Path::new(filename)
         .canonicalize()
         .map_err(|e| format!("Failed to canonicalize {}: {}", filename, e))?;
-    let relative_path = full_path
-        .strip_prefix(current_dir)
-        .map_err(|e| format!("Failed to strip prefix: {}", e))?;
+
+    // Calculate relative path from current_dir to full_path
+    let relative_path = pathdiff::diff_paths(&full_path, current_dir)
+        .ok_or_else(|| format!("Failed to calculate relative path for {}", filename))?;
+
     Ok(relative_path.to_string_lossy().into_owned())
 }
 

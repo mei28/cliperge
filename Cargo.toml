@@ -14,6 +14,7 @@ categories = ["command-line-utilities"]
 clap = { version = "4.0", features = ["derive"] }
 dirs = "4.0"
 colored = "2.0"
+pathdiff = "0.2"
 
 [package.metadata.docs.rs]
 # Include examples in documentation.
